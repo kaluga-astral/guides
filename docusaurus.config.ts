@@ -75,52 +75,7 @@ const config: Config = {
       ],
     },
     footer: {
-      style: 'dark',
-      links: [
-        {
-          title: 'Rules',
-          items: [
-            {
-              label: 'React',
-              to: '/docs/category/react',
-            },
-          ],
-        },
-        {
-          title: 'Eslint configs',
-          items: [
-            {
-              label: '@astral/eslint-config-react-ts',
-              to: 'https://www.npmjs.com/package/@astral/eslint-config-react-ts',
-            },
-            {
-              label: '@astral/eslint-config-node',
-              to: 'https://www.npmjs.com/package/@astral/eslint-config-node',
-            },
-            {
-              label: '@astral/eslint-config-node-ts',
-              to: 'https://www.npmjs.com/package/@astral/eslint-config-node-ts',
-            },
-            {
-              label: '@astral/eslint-config-vitest',
-              to: 'https://www.npmjs.com/package/@astral/eslint-config-vitest',
-            },
-            {
-              label: '@astral/eslint-config-react-vitest',
-              to: 'https://www.npmjs.com/package/@astral/eslint-config-react-vitest',
-            },
-          ],
-        },
-        {
-          title: 'Stylelint configs',
-          items: [
-            {
-              label: '@astral/stylelint-config-styled',
-              to: 'https://www.npmjs.com/package/@astral/stylelint-config-styled',
-            },
-          ],
-        },
-      ],
+      style: 'dark'
     },
     prism: {
       theme: prismThemes.github,
