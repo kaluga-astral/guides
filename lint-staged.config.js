@@ -1,5 +1,5 @@
 module.exports = {
   '**/*.{js,jsx,ts,tsx,md,mdx}': [
-    () => 'yaspeller --only-errors',
+    'npm run spellcheck'
   ],
 };

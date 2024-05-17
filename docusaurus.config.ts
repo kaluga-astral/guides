@@ -54,7 +54,7 @@ const config: Config = {
       }
     ],
     navbar: {
-      title: 'Frontend Style Guide',
+      title: 'Frontend Guides',
       logo: {
         alt: 'Логотип Астрал-Софт',
         src: 'img/logo.png',
