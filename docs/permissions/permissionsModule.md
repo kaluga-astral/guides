@@ -5,6 +5,18 @@
 ```
 ├── modules/
 |    ├── permissions/
+|    |    ├── stores/
+|    |    |    ├── PermissionStore/
+|    |    |    └── index.ts
+|    |    ├── features/
+|    |    |    ├── routesGuards/
+|    |    |    |    ├── AdminRouteGuard/
+|    |    |    |    ├── ReadingBookRouteGuard/
+|    |    |    |    └── index.ts
+|    |    |    └── index.ts
+|    |    ├── types/
+|    |    ├── enums.ts
+|    |    └── index.ts
 |    ├── payment/
 |    └── layout/
 ```
