@@ -1,0 +1,8 @@
+{
+  "label": "Доступы на клиенте (permissions)",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "Паттерн реализации системы доступов на клиенте"
+  }
+}
