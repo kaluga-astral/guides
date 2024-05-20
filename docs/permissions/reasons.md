@@ -2,7 +2,7 @@
 sidebar_position: 4
 ---
 
-# Причины отказа в доступе
+# Reasons. Причины отказа в доступе
 
 Каждый [permission](./permissionsFormation) возвращает объект:
 ```ts
