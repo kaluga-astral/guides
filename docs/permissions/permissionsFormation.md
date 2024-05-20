@@ -152,3 +152,118 @@ public calcReadingBook = (bookId: string) => { ... }
 public checkReadingBook = (bookId: string) => { ... }
 ```
 
+## Использование permissions
+
+Результат вычисления permission - это объект:
+```ts
+type Permission = {
+  /**
+   * Разрешен ли доступ
+   */
+  isAllowed: boolean;
+  /**
+   * Причина отказа в доступе
+   */
+  reason?: PermissionDenialReason;
+};
+```
+
+В features необходимо избегать разрешение доступов через абстрактные компоненты вида:
+```tsx
+import { observer } from 'mobx-react-lite';
+
+import { permissionsStore } from '@example/modules/permissions';
+
+export const Sidebar = observer(() => {
+  return (
+    <Sidebar>
+      <PermissionsGateway
+        permission={permissionsStore.administration.administrationActions}
+        allow={
+          <RouterLink to={APP_ROUTES.createBook.getRedirectPath()}>
+            Создать книгу
+          </RouterLink>
+        }
+      />
+    </Sidebar>
+  );
+});
+```
+
+Использование компонентов вроде `PermissionsGateway` переносит логику доступов для фичи в UI слой, что нарушает [архитектурную концепцию](https://industrious-search-cdf.notion.site/Features-8536d73e2c86429c951b1cb9653e7294#da95e9d71cde4865a15d5559e7988619).
+
+Разрешение доступов должно происходит в `UIStore`.
+
+### Пример реализации и использования permission
+
+**Требования**
+
+Кнопка "Создать книгу" в Sidebar отображается только если пользователь является администратором.
+
+**Решение**
+
+```modules/permissions/domain/PermissionsStore/policies/AdministrationPolicy```
+О [политиках](./policies) подробно будет написано в последующих разделах документации.
+
+```ts
+class AdministrationPolicy {
+  constructor(
+    private readonly policyManager: PolicyManagerStore,
+    private readonly userRepo: UserRepository,
+  ) {
+    makeAutoObservable(this, {}, { autoBind: true });
+
+    this.policyManager.registerPolicy({
+      name: 'administration',
+      prepareData: async (): Promise<void> => {
+        await Promise.all([this.userRepo.getRolesQuery().async()]);
+      },
+    });
+  }
+
+  /**
+   * Доступ к действиям администратора
+   */
+  public get administrationActions() {
+    return this.policyManager.processPermission((allow, deny) => {
+      if (this.userRepo.getRolesQuery().data?.isAdmin) {
+        return allow();
+      }
+
+      deny(PermissionDenialReason.NoAdmin);
+    });
+  }
+}
+```
+
+```modules/layout/features/MainLayout/Sidebar/UIStore```
+```ts
+export class UIStore {
+  constructor(private readonly permissions: PermissionsStore) {
+    makeAutoObservable(this, {}, { autoBind: true });
+  }
+
+  public get isAllowedBookCreation() {
+    return this.permissions.administration.administrationActions.isAllowed;
+  }
+}
+```
+
+```modules/layout/features/MainLayout/Sidebar/Sidebar.tsx```
+```tsx
+export const Sidebar = observer(() => {
+  const [{ isAllowedBookCreation }] = useState(createUIStore);
+
+  return (
+    <Sidebar>
+      <SidebarItem>
+        {isAllowedBookCreation && (
+          <RouterLink to={APP_ROUTES.createBook.getRedirectPath()}>
+            Создать книгу
+          </RouterLink>
+        )}
+      </SidebarItem>
+    </Sidebar>
+  );
+});
+```
