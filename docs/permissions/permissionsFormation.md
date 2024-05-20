@@ -49,7 +49,7 @@ Permission не должен напрямую зависеть и указыва
 
 ```ts
 
-class AdministrationPolicy {
+class AdministrationPolicyStore {
     public get showCreationDocButton() {
       return this.policyManager.processPermission((allow, deny) => {
         if (this.userRepo.getRolesQuery().data?.isAdmin) {
@@ -92,7 +92,7 @@ class AdministrationPolicy {
 Создать абстрактный permission `administrationActions`, который будет закрывать доступ к действиям администратора:
 
 ```ts
-class AdministrationPolicy {
+class AdministrationPolicyStore {
   public get administrationActions() {
     return this.policyManager.processPermission((allow, deny) => {
       if (this.userRepo.getRolesQuery().data?.isAdmin) {
@@ -202,11 +202,11 @@ export const Sidebar = observer(() => {
 
 **Решение**
 
-```modules/permissions/domain/PermissionsStore/policies/AdministrationPolicy```
+```modules/permissions/domain/PermissionsStore/policies/AdministrationPolicyStore```
 О [политиках](./policies) подробно будет написано в последующих разделах документации.
 
 ```ts
-class AdministrationPolicy {
+class AdministrationPolicyStore {
   constructor(
     private readonly policyManager: PolicyManagerStore,
     private readonly userRepo: UserRepository,

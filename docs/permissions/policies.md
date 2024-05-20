@@ -26,6 +26,53 @@ sidebar_position: 5
 
 Policies являются частью имплементации PermissionStore, поэтому находятся внутри него.
 
+## Создание политик
+
+### Политики создаются на основе модулей системы
+
+Modules - это предметные подобласти предметной области проекта.
+
+Permissions внутри policies работают в рамках предметных подобласть проекта, поэтому policies должны соответствовать названию modules.
+
+**Примеры**
+
+- Permission `administrationActions` концептуально относится к модулю `administration`, поэтому создается `AdministrationPolicy`
+- Permission `readingBook` концептуально относится к модулю `books`, поэтому создается `BooksPolicy`
+
+### Пример создания
+
+```modules/permissions/domain/stores/PermissionsStore/policies/AdministrationPolicyStore```
+```ts
+class AdministrationPolicyStore {
+  constructor(
+    private readonly policyManager: PolicyManagerStore,
+    private readonly userRepo: UserRepository,
+  ) {
+    makeAutoObservable(this, {}, { autoBind: true });
+
+    this.policyManager.registerPolicy({
+      name: 'administration',
+      prepareData: async (): Promise<void> => {
+        await Promise.all([this.userRepo.getRolesQuery().async()]);
+      },
+    });
+  }
+
+  /**
+   * Доступ к действиям администратора
+   */
+  public get administrationActions() {
+    return this.policyManager.processPermission((allow, deny) => {
+      if (this.userRepo.getRolesQuery().data?.isAdmin) {
+        return allow();
+      }
+
+      deny(PermissionDenialReason.NoAdmin);
+    });
+  }
+}
+```
+
 ## Доступ к политикам через единую точку
 
 Доступ к политикам и соответственно к permissions осуществляется только через `PermissionsStore`:
@@ -79,17 +126,6 @@ export class UIStore {
 - Возможность централизованной подготовки данных для формирования permissions
 - Возможность реализации логирования для дебагинга
 - Увеличение DX за счет отказа от необходимо импорта разных policies
-
-## Политики создаются на основе модулей системы
-
-Modules - это предметные подобласти предметной области проекта.
-
-Permissions внутри policies работают в рамках предметных подобласть проекта, поэтому policies должны соответствовать названию modules.
-
-**Примеры**
-
-- Permission `administrationActions` концептуально относится к модулю `administration`, поэтому создается `AdministrationPolicy`
-- Permission `readingBook` концептуально относится к модулю `books`, поэтому создается `BooksPolicy`
 
 ## Переиспользование логики между policies
 
