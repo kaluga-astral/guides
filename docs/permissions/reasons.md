@@ -90,9 +90,9 @@ export class UIStore {
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
-  public addToShelf = (bookId: string) => {
+  public addToShelf = () => {
     if (this.permissions.books.addingToShelf.isAllowed) {
-      this.notifyService.info(`Книга ${bookId} добавлена на полку`);
+      this.notifyService.info(`Книга ${this.bookId} добавлена на полку`);
 
       return;
     }
