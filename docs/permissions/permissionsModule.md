@@ -1,3 +1,7 @@
+---
+sidebar_position: 2
+---
+
 # Единый Permissions Module
 
 Вся логика, относящиеся к доступам, должна находится в модуле `permissions`:
