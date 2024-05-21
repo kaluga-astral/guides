@@ -15,12 +15,13 @@ sidebar_position: 6
 ├── modules/
 |    ├── permissions/
 |    |    ├── stores/
-|    |    |    ├── rules/
-|    |    |    |    |── checkAcceptableAge/
-|    |    |    |    |── checkAccountPayment/
-|    |    |    |    └── index.ts
-|    |    |    ├── policies/
 |    |    |    ├── PermissionsStore/
+|    |    |    |    ├── policies/
+|    |    |    |    ├── rules/
+|    |    |    |    |    |── checkAcceptableAge/
+|    |    |    |    |    |── checkAccountPayment/
+|    |    |    |    |    └── index.ts
+|    |    |    ├── PermissionsStore.ts
 |    |    |    └── index.ts
 |    |    ├── enums.ts
 |    |    └── index.ts
@@ -125,7 +126,7 @@ const checkAcceptableAge = (acceptableAge: string?, userBirthday?: string) => {.
 Оба permissions должны реализовать одну и ту же логику проверки возраста пользователя.
 Необходимо реализовать rule: `calcAcceptableAge`:
 
-```modules/permissions/domain/PermissionsStore/rules/calcAcceptableAge```
+```modules/permissions/domain/stores/PermissionsStore/rules/calcAcceptableAge```
 ```ts
 
 export const calcAcceptableAge = (
@@ -149,7 +150,7 @@ export const calcAcceptableAge = (
   });
 ```
 
-```modules/permissions/domain/PermissionsStore/policies/PaymentPolicyStore```
+```modules/permissions/domain/stores/PermissionsStore/policies/PaymentPolicyStore```
 ```ts
 export class PaymentPolicyStore {
   constructor(
@@ -185,7 +186,7 @@ export class PaymentPolicyStore {
 }
 ```
 
-```modules/permissions/domain/PermissionsStore/policies/BookPolicyStore```
+```modules/permissions/domain/stores/PermissionsStore/policies/BookPolicyStore```
 ```ts
 export class BooksPolicyStore {
   constructor(

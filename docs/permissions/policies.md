@@ -13,12 +13,13 @@ sidebar_position: 5
 ├── modules/
 |    ├── permissions/
 |    |    ├── stores/
-|    |    |    ├── policies/
-|    |    |    |    |── AdministrationPolicyStore/
-|    |    |    |    |── BooksPolicyStore/
-|    |    |    |    |── PaymentPolicyStore/
-|    |    |    |    └── index.ts
 |    |    |    ├── PermissionsStore/
+|    |    |    |    ├── policies/
+|    |    |    |    |    |── AdministrationPolicyStore/
+|    |    |    |    |    |── BooksPolicyStore/
+|    |    |    |    |    |── PaymentPolicyStore/
+|    |    |    |    |    └── index.ts
+|    |    |    ├── PermissionsStore.ts
 |    |    |    └── index.ts
 |    |    ├── enums.ts
 |    |    └── index.ts

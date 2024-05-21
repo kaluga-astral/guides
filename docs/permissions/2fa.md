@@ -14,7 +14,7 @@ Permissions могут работать сообща с `2FAService`.
 
 **Реализация**
 
-```modules/permissions/domain/PermissionsStore/policies/AdministrationPolicyStore```
+```modules/permissions/domain/stores/PermissionsStore/policies/AdministrationPolicyStore```
 ```ts
 export class AdministrationPolicyStore {
   constructor(

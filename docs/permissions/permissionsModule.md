@@ -11,6 +11,10 @@ sidebar_position: 2
 |    ├── permissions/
 |    |    ├── stores/
 |    |    |    ├── PermissionsStore/
+|    |    |    |    ├── policies/
+|    |    |    |    ├── rules/
+|    |    |    |    ├── PermissionsStore.ts
+|    |    |    |    └── index.ts
 |    |    |    └── index.ts
 |    |    ├── features/
 |    |    |    ├── routesGuards/

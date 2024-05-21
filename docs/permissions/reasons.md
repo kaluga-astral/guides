@@ -36,7 +36,7 @@ type Permission = {
 
 **Решение**
 
-```modules/permissions/domain/PermissionsStore/policies/BooksPolicy```
+```modules/permissions/domain/stores/PermissionsStore/policies/BooksPolicy```
 ```ts
 export class BooksPolicyStore {
   constructor(

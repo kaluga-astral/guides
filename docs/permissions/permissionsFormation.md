@@ -43,12 +43,11 @@ Permission не должен напрямую зависеть и указыва
 
 ```Кнопка "Создать документ" отображается только если пользователь является администратором``` - в данном требовании присутствует указать на конкретную кнопку.
 
-#### Не правильное решение
+#### Неправильное решение
 
 Создать permission `showCreationDocButton`:
 
 ```ts
-
 class AdministrationPolicyStore {
     public get showCreationDocButton() {
       return this.policyManager.processPermission((allow, deny) => {
@@ -168,7 +167,7 @@ type Permission = {
 };
 ```
 
-В features необходимо избегать разрешение доступов через абстрактные компоненты вида:
+В features необходимо избегать разрешения доступов через абстрактные компоненты вида:
 ```tsx
 import { observer } from 'mobx-react-lite';
 
@@ -202,7 +201,7 @@ export const Sidebar = observer(() => {
 
 **Решение**
 
-```modules/permissions/domain/PermissionsStore/policies/AdministrationPolicyStore```
+```modules/permissions/domain/stores/PermissionsStore/policies/AdministrationPolicyStore```
 О [политиках](./policies) подробно будет написано в последующих разделах документации.
 
 ```ts
