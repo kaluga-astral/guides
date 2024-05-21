@@ -191,7 +191,7 @@ export const Sidebar = observer(() => {
 
 Использование компонентов вроде `PermissionsGateway` переносит логику доступов для фичи в UI слой, что нарушает [архитектурную концепцию](https://industrious-search-cdf.notion.site/Features-8536d73e2c86429c951b1cb9653e7294#da95e9d71cde4865a15d5559e7988619).
 
-Разрешение доступов должно происходит в `UIStore`.
+Разрешение доступов должно происходить в `UIStore`.
 
 ### Пример реализации и использования permission
 
