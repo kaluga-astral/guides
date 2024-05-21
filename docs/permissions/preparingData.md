@@ -16,7 +16,6 @@ sidebar_position: 7
 
 При регистрации `policy` необходимо указать как получить эти данные:
 ```ts
-
 export class BooksPolicyStore {
   constructor(
     private readonly policyManager: PolicyManagerStore,
@@ -207,4 +206,14 @@ export class UIStore {
 }
 ```
 
-## Обработка проблем при получении данных для формирования доступов
+## Обработка проблем получения данных
+
+Если перед использованием permissions в features, не были успешно загружены данные, то permissions будут возвращать объект с конкретным reason:
+```ts
+type DenialMissingDataPermission = {
+  isAllowed: false;
+  reason: PermissionDenialReason.MissingData;
+};
+```
+
+Reason `PermissionDenialReason.MissingData` можно будет при необходимости обработать централизованно или на месте использования permissions.
