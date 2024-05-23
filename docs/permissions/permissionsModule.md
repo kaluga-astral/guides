@@ -65,8 +65,3 @@ sidebar_position: 2
 Модуль `permissions` содержит доступы `docActions` и `deletingOrganization`, импортируя логику из модулей `docs` и `organization`.
 
 Модуль `docs` и `organization` теперь не зацеплены между собой.
-
-## Public API
-
-`PermissionStore` - это единая входная точка в приложении для получения информации о доступах.
-Другие модули приложения взаимодействуют именно с `PermissionStore`.
