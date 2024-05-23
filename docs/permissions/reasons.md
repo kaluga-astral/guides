@@ -39,17 +39,26 @@ type Permission = {
 
 ```modules/permissions/domain/stores/PermissionsStore/policies/BooksPolicy```
 ```ts
+// @astral/permissions в реальном коде должен реэкспортироваться через shared
+import { PolicyManagerStore, Policy } from '@astral/permissions';
+
 export class BooksPolicyStore {
+  private readonly policy: PermissionsPolicy;
+
   constructor(
-    private readonly policyManager: PolicyManagerStore,
+    policyManager: PolicyManagerStore,
     private readonly billingRepo: BillingRepository,
+    private readonly userRepo: UserRepository,
   ) {
     makeAutoObservable(this, {}, { autoBind: true });
 
-    this.policyManager.createPolicy({
+    this.policy = policyManager.createPolicy({
       name: 'books',
       prepareData: async () => {
-        await Promise.all([this.billingRepo.getBillingInfoQuery().async()]);
+        await Promise.all([
+          this.userRepo.getRolesQuery().async(),
+          this.billingRepo.getBillingInfoQuery().async(),
+        ]);
       },
     });
   }
@@ -58,7 +67,11 @@ export class BooksPolicyStore {
    * Возможность добавить на полку книгу
    */
   public get addingToShelf() {
-    return this.policyManager.createPermission((allow, deny) => {
+    return this.policy.createPermission((allow, deny) => {
+      if (this.userRepo.getRolesQuery().data?.isAdmin) {
+        return allow();
+      }
+
       const billingInfo = this.billingRepo.getBillingInfoQuery()?.data;
 
       if (!billingInfo?.paid) {
@@ -66,8 +79,8 @@ export class BooksPolicyStore {
       }
 
       if (
-          billingInfo.info.shelf.allowedCount ===
-          billingInfo.info.shelf.currentCount
+        billingInfo.info.shelf.currentCount >=
+        billingInfo.info.shelf.allowedCount
       ) {
         return deny(PermissionDenialReason.ExceedShelfCount);
       }
