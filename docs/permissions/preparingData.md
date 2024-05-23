@@ -14,22 +14,28 @@ sidebar_position: 7
 
 В `BooksPolicy` для формирования доступа `addingToShelf` требуются данные из `UserRepository` и `BillingRepository`.
 
-При регистрации `policy` необходимо указать как получить эти данные:
+При создании `policy` необходимо указать как получить эти данные:
 ```ts
+// @astral/permissions в реальном коде должен реэкспортироваться через shared
+import { PolicyManagerStore, Policy } from '@astral/permissions';
+
 export class BooksPolicyStore {
+  private readonly policy: PermissionsPolicy;
+
   constructor(
-    private readonly policyManager: PolicyManagerStore,
+    policyManager: PolicyManagerStore,
     private readonly billingRepo: BillingRepository,
     private readonly userRepo: UserRepository,
   ) {
     makeAutoObservable(this, {}, { autoBind: true });
 
-    this.policyManager.registerPolicy({
+    this.policy = policyManager.createPolicy({
       name: 'books',
-      // Метод подготовки данных для формирования доступов в BooksPolicyStore
+      // prepareData будет вызван одновременно с другими policy посредством policyManager
       prepareData: async () => {
         await Promise.all([
           this.userRepo.getRolesQuery().async(),
+          this.userRepo.getPersonInfoQuery().async(),
           this.billingRepo.getBillingInfoQuery().async(),
         ]);
       },
@@ -40,7 +46,7 @@ export class BooksPolicyStore {
    * Возможность добавить на полку книгу
    */
   public get addingToShelf() {
-    return this.policyManager.processPermission((allow, deny) => {
+    return this.policy.createPermission((allow, deny) => {
       if (this.userRepo.getRolesQuery().data?.isAdmin) {
         return allow();
       }
@@ -52,8 +58,8 @@ export class BooksPolicyStore {
       }
 
       if (
-        billingInfo.info.shelf.allowedCount ===
-        billingInfo.info.shelf.currentCount
+        billingInfo.info.shelf.currentCount >=
+        billingInfo.info.shelf.allowedCount
       ) {
         return deny(PermissionDenialReason.ExceedShelfCount);
       }
@@ -66,7 +72,54 @@ export class BooksPolicyStore {
 
 ## `PermissionsStore.prepareData` подготовит данные для всех policy
 
-`PermissionsStore` имеет метод `prepareData`, который вызовет подготовку данных в каждом policy.
+`PermissionsStore` должен иметь метод `prepareData`, который вызовет подготовку данных в каждом policy:
+
+```ts
+// В реальном коде @astral/permissions необходимо реэкспортировать через shared
+import type { PolicyManagerStore } from '@astral/permissions';
+import { createPolicyManagerStore } from '@astral/permissions';
+
+/**
+ * Содержит все доступы приложения
+ */
+export class PermissionsStore {
+  private readonly policyManager: PolicyManagerStore;
+
+  public readonly administration: AdministrationPolicyStore;
+
+  public readonly books: BooksPolicyStore;
+
+  constructor(billingRepo: BillingRepository, userRepo: UserRepository) {
+    makeAutoObservable(this, {}, { autoBind: true });
+
+    // policyManager регистрирует все доступы и позволяет подготовить данные для формирования доступов
+    this.policyManager = createPolicyManagerStore();
+
+    this.administration = createAdministrationPolicyStore(
+      this.policyManager,
+      userRepo,
+    );
+
+    this.books = createBooksPolicyStore(
+      this.policyManager,
+      billingRepo,
+      userRepo,
+    );
+  }
+
+  /**
+   * Подготавливает данные для формирования доступов
+   */
+  public prepareData = () => this.policyManager.prepareDataSync();
+
+  public get preparingDataStatus() {
+    return this.policyManager.preparingDataStatus;
+  }
+}
+```
+
+За подготовку данных отвечает `PolicyManagerStore`. `PolicyManagerStore` регистрирует для каждого policy метод подготовки `prepareData` 
+и при вызове `policyManager.prepareData` запускает вызов каждой `prepareData` каждого policy 
 
 **Мотивация использования единого метода подготовки данных**
 
@@ -121,37 +174,40 @@ export const App = observer(() => {
 
 Если запросы являются не оптимальными для использования в `PermissionsStore`, то для формирования permissions необходимо использовать методы, принимающие на вход данные:
 ```ts
+import { calcAcceptableAge } from '../../rules';
+
 export class PaymentPolicyStore {
+  private readonly policy: PermissionsPolicy;
+
   constructor(
-      private readonly policyManager: PolicyManagerStore,
-      private readonly userRepo: UserRepository,
+    policyManager: PermissionsPolicyManagerStore,
+    private readonly userRepo: UserRepository,
   ) {
     makeAutoObservable(this, {}, { autoBind: true });
 
-    policyManager.registerPolicy({
+    this.policy = policyManager.createPolicy({
       name: 'payment',
       prepareData: async () => {
-        await Promise.all([userRepo.getPersonInfoQuery().async()]);
+          await Promise.all([userRepo.getPersonInfoQuery().async()]);
       },
     });
   }
 
-  // acceptableAge запрашивается вне PaymentPolicyStore потому, что запрашивать данные по конкретному товару при инициализации приложения не оптимально
-  public calcPayment = (acceptableAge?: number) =>
-    this.policyManager.processPermission((allow, deny) => {
-        if (!acceptableAge) {
-          return deny(PermissionDenialReason.MissingData);
-        }
+  /**
+   * Возможность оплатить товар
+   */
+  public calcPayment = (acceptableAge: number) =>
+    this.policy.createPermission((allow, deny) => {
+      const agePermission = calcAcceptableAge(
+        acceptableAge,
+        this.userRepo.getPersonInfoQuery().data?.birthday,
+      );
 
-        if (!userBirthday) {
-          return deny(PermissionDenialReason.MissingUserAge);
-        }
+      if (!agePermission.isAllowed) {
+        return deny(agePermission.reason);
+      }
 
-        if (getDateYearDiff(new Date(userBirthday), new Date()) < acceptableAge) {
-          return deny(PermissionDenialReason.NotForYourAge);
-        }
-
-        allow();
+      allow();
     });
 }
 ```
@@ -185,7 +241,7 @@ export class UIStore {
       return;
     }
 
-    if (payPermission.hasReason('not-for-your-age')) {
+    if (payPermission.hasReason(PermissionDenialReason.NotAcceptAge)) {
         this.notifyService.error('Вы слишком молоды');
 
         return;

@@ -17,6 +17,8 @@ Permissions могут работать сообща с `2FAService`.
 ```modules/permissions/domain/stores/PermissionsStore/policies/AdministrationPolicyStore```
 ```ts
 export class AdministrationPolicyStore {
+  private readonly policy: Policy;
+    
   constructor(
     private readonly policyManager: PolicyManagerStore,
     private readonly userRepo: UserRepository,
@@ -24,7 +26,7 @@ export class AdministrationPolicyStore {
   ) {
     makeAutoObservable(this, {}, { autoBind: true });
 
-    this.policyManager.registerPolicy({
+    this.policy = this.policyManager.createPolicy({
       name: 'administration',
       prepareData: async (): Promise<void> => {
         await Promise.all([this.userRepo.getRolesQuery().async()]);
@@ -36,7 +38,7 @@ export class AdministrationPolicyStore {
    * Доступ к действиям администратора
    */
   public get administrationActions() {
-    return this.policyManager.processPermission((allow, deny) => {
+    return this.policy.createPermission((allow, deny) => {
       // Если twoFA не пройдена, то отказываем в доступе с причиной, которая будет обработана в features
       // Также, по необходимости, можно вызвать логику запроса от пользователя прохождения 2FA
       if (!twoFA.isPassed) {
@@ -74,7 +76,7 @@ export class UIStore {
         return;
       }
 
-      if (permission.hasReason('no-admin')) {
+      if (permission.hasReason(PermissionDenialReason.NoAdmin)) {
           this.notifyService.error(
             'Доступно только администратору'
           );
@@ -82,7 +84,7 @@ export class UIStore {
           return;
       }
 
-      if (permission.hasReason('2fa')) {
+      if (permission.hasReason(PermissionDenialReason.TwoFA)) {
         // Здесь можно, например, реализовать открытие модалки для 2FA
         this.notifyService.error(
           'Нужно пройти 2FA',

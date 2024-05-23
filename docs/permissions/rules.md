@@ -18,8 +18,8 @@ sidebar_position: 6
 |    |    |    ├── PermissionsStore/
 |    |    |    |    ├── policies/
 |    |    |    |    ├── rules/
-|    |    |    |    |    |── checkAcceptableAge/
-|    |    |    |    |    |── checkAccountPayment/
+|    |    |    |    |    |── calcAcceptableAge/
+|    |    |    |    |    |── calcAccountPayment/
 |    |    |    |    |    └── index.ts
 |    |    |    ├── PermissionsStore.ts
 |    |    |    └── index.ts
@@ -33,87 +33,9 @@ Rules недоступны вне permissions модуля и являются �
 
 ## Реализация rules
 
-Rules возвращают такой же объект, как и permissions:
-```ts
-type Permission = {
-  /**
-   * Разрешен ли доступ
-   */
-  isAllowed: boolean;
-  /**
-   * Причина отказа в доступе
-   */
-  reason?: PermissionDenialReason;
-};
-```
+Rules создаются с помощью `createRule` из пакета [@astral/permissions](https://www.npmjs.com/package/@astral/permissions):
 
-Permissions в policies могут вычисляться на основе rules:
-```ts
-import { calcAcceptableAge } from '../../rules';
-
-export class PaymentPolicyStore {
-  constructor(
-    private readonly policyManager: PolicyManagerStore,
-    private readonly userRepo: UserRepository,
-  ) {
-    makeAutoObservable(this, {}, { autoBind: true });
-
-    policyManager.registerPolicy({
-      name: 'payment',
-      prepareData: async () => {
-        await Promise.all([userRepo.getPersonInfoQuery().async()]);
-      },
-    });
-  }
-
-  /**
-   * Возможность оплатить товар
-   */
-  public calcPayment = (acceptableAge: number) =>
-    this.policyManager.processPermission((allow, deny) => {
-      // calcAcceptableAge - правило, полностью реализующее calcPayment permission
-      const agePermission = calcAcceptableAge(
-        acceptableAge,
-        this.userRepo.getPersonInfoQuery().data?.birthday,
-      );
-
-      if (!agePermission.isAllowed) {
-        return deny(agePermission.reason);
-      }
-
-      allow();
-    });
-}
-
-```
-
-## Нейминг
-
-Все правила имеют префикс `calc`.
-
-**✅ Valid**
-
-```ts
-/**
- * Вычислить админские доступы
- */
-const calcAdminPermissions = (role: string) => {...};
-
-/**
- * Вычислить доступность возраста
- */
-const calcAcceptableAge = (acceptableAge: string?, userBirthday?: string) => {...};
-```
-
-**❌ Invalid**
-
-```ts
-const checkAdminRole = (role: string) => {...};
-
-const checkAcceptableAge = (acceptableAge: string?, userBirthday?: string) => {...};
-```
-
-## Пример
+### Пример
 
 **Требования**
 
@@ -128,6 +50,8 @@ const checkAcceptableAge = (acceptableAge: string?, userBirthday?: string) => {.
 
 ```modules/permissions/domain/stores/PermissionsStore/rules/calcAcceptableAge```
 ```ts
+// @astral/permissions в реальном коде необходимо реэкспортировать через shared
+import { createRule } from '@astral/permissions';
 
 export const calcAcceptableAge = (
     acceptableAge?: number,
@@ -150,19 +74,25 @@ export const calcAcceptableAge = (
   });
 ```
 
+Далее `PaymentPolicyStore` и `BooksPolicyStore` используют `calcAcceptableAge` для вычисления доступов:
+
 ```modules/permissions/domain/stores/PermissionsStore/policies/PaymentPolicyStore```
 ```ts
+import { calcAcceptableAge } from '../../rules';
+
 export class PaymentPolicyStore {
+  private readonly policy: PermissionsPolicy;
+
   constructor(
-      private readonly policyManager: PolicyManagerStore,
-      private readonly userRepo: UserRepository,
+    policyManager: PermissionsPolicyManagerStore,
+    private readonly userRepo: UserRepository,
   ) {
     makeAutoObservable(this, {}, { autoBind: true });
 
-    policyManager.registerPolicy({
+    this.policy = policyManager.createPolicy({
       name: 'payment',
       prepareData: async () => {
-        await Promise.all([userRepo.getPersonInfoQuery().async()]);
+          await Promise.all([userRepo.getPersonInfoQuery().async()]);
       },
     });
   }
@@ -171,8 +101,8 @@ export class PaymentPolicyStore {
    * Возможность оплатить товар
    */
   public calcPayment = (acceptableAge: number) =>
-    this.policyManager.processPermission((allow, deny) => {
-      const agePermission = checkAcceptableAge(
+    this.policy.createPermission((allow, deny) => {
+      const agePermission = calcAcceptableAge(
         acceptableAge,
         this.userRepo.getPersonInfoQuery().data?.birthday,
       );
@@ -186,29 +116,38 @@ export class PaymentPolicyStore {
 }
 ```
 
-```modules/permissions/domain/stores/PermissionsStore/policies/BookPolicyStore```
+```modules/permissions/domain/stores/PermissionsStore/policies/BooksPolicyStore```
 ```ts
+import { calcAcceptableAge } from '../../rules';
+
 export class BooksPolicyStore {
+  private readonly policy: PermissionsPolicy;
+
   constructor(
-      private readonly policyManager: PolicyManagerStore,
+      policyManager: PermissionsPolicyManagerStore,
+      private readonly billingRepo: BillingRepository,
       private readonly userRepo: UserRepository,
   ) {
     makeAutoObservable(this, {}, { autoBind: true });
 
-    policyManager.registerPolicy({
+    this.policy = policyManager.createPolicy({
       name: 'books',
       prepareData: async () => {
-        await Promise.all([userRepo.getPersonInfoQuery().async()]);
+        await Promise.all([
+          this.userRepo.getRolesQuery().async(),
+          this.userRepo.getPersonInfoQuery().async(),
+          this.billingRepo.getBillingInfoQuery().async(),
+        ]);
       },
     });
   }
 
   /**
-   * Возможность прочитать книгу
+   * Возможность прочитать книгу онлайн
    */
-  public calcReadingBook = (acceptableAge?: number) =>
-    this.policyManager.processPermission((allow, deny) => {
-      const agePermission = checkAcceptableAge(
+  public calcReadingOnline = (acceptableAge?: number) => {
+    return this.policy.createPermission((allow, deny) => {
+      const agePermission = calcAcceptableAge(
         acceptableAge,
         this.userRepo.getPersonInfoQuery().data?.birthday,
       );
@@ -217,7 +156,40 @@ export class BooksPolicyStore {
         return deny(agePermission.reason);
       }
 
+      const billingInfo = this.billingRepo.getBillingInfoQuery().data;
+
+      if (!billingInfo?.paid) {
+        return deny(PermissionDenialReason.NoPayAccount);
+      }
+
       allow();
     });
+  };
 }
+```
+
+## Нейминг
+
+Все rules имеют префикс `calc`.
+
+**✅ Valid**
+
+```ts
+/**
+ * Вычислить админские доступы
+ */
+const calcAdminPermissions = (role: string) => {...};
+
+/**
+ * Вычислить доступность возраста
+ */
+const calcAcceptableAge = (acceptableAge: string?, userBirthday?: string) => {...};
+```
+
+**❌ Invalid**
+
+```ts
+const checkAdminRole = (role: string) => {...};
+
+const checkAcceptableAge = (acceptableAge: string?, userBirthday?: string) => {...};
 ```

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Формирование доступов
@@ -34,6 +34,172 @@ sidebar_position: 3
 
 ```Кнопка "Отправить" заблокирована, если чекбокс "Ознакомлен с требованиями" не активен``` - это не permission. Это требование для формы.
 
+## Создание permissions посредством @astral/permissions
+
+Permissions создаются только внутри policy с помощью метода `policy.createPermission`:
+
+```modules/permissions/domain/stores/PermissionsStore/policies/AdministrationPolicyStore```
+```ts
+import { makeAutoObservable } from 'mobx';
+
+import type { UserRepository } from '@example/data';
+
+import { PermissionDenialReason } from '../../../../enums';
+
+// @astral/permissions в реальном коде должен реэкспортироваться через shared
+import { PolicyManagerStore, Policy } from '@astral/permissions';
+
+export class AdministrationPolicyStore {
+  private readonly policy: Policy;
+
+  constructor(
+    private readonly policyManager: PolicyManagerStore,
+    private readonly userRepo: UserRepository,
+  ) {
+    makeAutoObservable(this, {}, { autoBind: true });
+
+    this.policy = this.policyManager.createPolicy({
+      name: 'administration',
+      prepareData: async (): Promise<void> => {
+        await Promise.all([this.userRepo.getRolesQuery().async()]);
+      },
+    });
+  }
+
+  /**
+   * Доступ к действиям администратора
+   */
+  public get administrationActions() {
+    return this.policy.createPermission((allow, deny) => {
+      if (this.userRepo.getRolesQuery().data?.isAdmin) {
+          // разрешает доступ
+          return allow();
+      }
+
+      // запрещает доступ с конкретной причиной
+      deny(PermissionDenialReason.NoAdmin);
+    });
+  }
+}
+```
+
+### API Permission
+
+`createPermission` возвращает объект вида:
+```ts
+type Permission = {
+  isAllowed: boolean;
+  /**
+   * Причина отказа в доступе
+   */
+  reason?: string;
+  /**
+   * @example permission.hasReason(DenialReason.NoAdmin)
+   */
+  hasReason: (reason: string) => boolean;
+};
+```
+
+О причинах отказа читайте [далее](./reasons).
+
+## Пример реализации и использования permission
+
+**Требования**
+
+Кнопка "Создать книгу" в Sidebar отображается только если пользователь является администратором.
+
+**Решение**
+
+```modules/permissions/domain/stores/PermissionsStore/policies/AdministrationPolicyStore```
+```ts
+class AdministrationPolicyStore {
+  constructor(
+    private readonly policyManager: PolicyManagerStore,
+    private readonly userRepo: UserRepository,
+  ) {
+    makeAutoObservable(this, {}, { autoBind: true });
+
+    this.policyManager.createPolicy({
+      name: 'administration',
+      prepareData: async (): Promise<void> => {
+        await Promise.all([this.userRepo.getRolesQuery().async()]);
+      },
+    });
+  }
+
+  /**
+   * Доступ к действиям администратора
+   */
+  public get administrationActions() {
+    return this.policyManager.createPermission((allow, deny) => {
+      if (this.userRepo.getRolesQuery().data?.isAdmin) {
+        return allow();
+      }
+
+      deny(PermissionDenialReason.NoAdmin);
+    });
+  }
+}
+```
+
+В features необходимо избегать разрешения доступов через абстрактные компоненты вида:
+```tsx
+import { observer } from 'mobx-react-lite';
+
+import { permissionsStore } from '@example/modules/permissions';
+
+export const Sidebar = observer(() => {
+  return (
+    <Sidebar>
+      <PermissionsGateway
+        permission={permissionsStore.administration.administrationActions}
+        allow={
+          <RouterLink to={APP_ROUTES.createBook.getRedirectPath()}>
+            Создать книгу
+          </RouterLink>
+        }
+      />
+    </Sidebar>
+  );
+});
+```
+
+Использование компонентов вроде `PermissionsGateway` переносит логику доступов для фичи в UI слой, что нарушает [архитектурную концепцию](https://industrious-search-cdf.notion.site/Features-8536d73e2c86429c951b1cb9653e7294#da95e9d71cde4865a15d5559e7988619).
+
+Разрешение доступов должно происходить в `UIStore`:
+
+```modules/layout/features/MainLayout/Sidebar/UIStore```
+```ts
+export class UIStore {
+  constructor(private readonly permissions: PermissionsStore) {
+    makeAutoObservable(this, {}, { autoBind: true });
+  }
+
+  public get isAllowedBookCreation() {
+    return this.permissions.administration.administrationActions.isAllowed;
+  }
+}
+```
+
+```modules/layout/features/MainLayout/Sidebar/Sidebar.tsx```
+```tsx
+export const Sidebar = observer(() => {
+  const [{ isAllowedBookCreation }] = useState(createUIStore);
+
+  return (
+    <Sidebar>
+      <SidebarItem>
+        {isAllowedBookCreation && (
+          <RouterLink to={APP_ROUTES.createBook.getRedirectPath()}>
+            Создать книгу
+          </RouterLink>
+        )}
+      </SidebarItem>
+    </Sidebar>
+  );
+});
+```
+
 ## Permission не должен зависеть от UI
 
 Permission не должен напрямую зависеть и указывать на UI, который блокируется.
@@ -49,35 +215,38 @@ Permission не должен напрямую зависеть и указыва
 
 ```ts
 class AdministrationPolicyStore {
-    public get showCreationDocButton() {
-      return this.policyManager.processPermission((allow, deny) => {
-        if (this.userRepo.getRolesQuery().data?.isAdmin) {
-          return allow();
-        }
 
-        deny(PermissionDenialReason.NoAdmin);
-      });
-    }
+  ...
 
-    public get allowAdministrationRoute() {
-      return this.policyManager.processPermission((allow, deny) => {
-        if (this.userRepo.getRolesQuery().data?.isAdmin) {
-          return allow();
-        }
+  public get showCreationDocButton() {
+    return this.policyManager.createPermission((allow, deny) => {
+      if (this.userRepo.getRolesQuery().data?.isAdmin) {
+        return allow();
+      }
 
-        deny(PermissionDenialReason.NoAdmin);
-      });
-    }
+      deny(PermissionDenialReason.NoAdmin);
+    });
+  }
 
-    public get showEditingDocModal() {
-      return this.policyManager.processPermission((allow, deny) => {
-        if (this.userRepo.getRolesQuery().data?.isAdmin) {
-          return allow();
-        }
+  public get allowAdministrationRoute() {
+    return this.policyManager.createPermission((allow, deny) => {
+      if (this.userRepo.getRolesQuery().data?.isAdmin) {
+        return allow();
+      }
 
-        deny(PermissionDenialReason.NoAdmin);
-      });
-    }
+      deny(PermissionDenialReason.NoAdmin);
+    });
+  }
+
+  public get showEditingDocModal() {
+    return this.policyManager.createPermission((allow, deny) => {
+      if (this.userRepo.getRolesQuery().data?.isAdmin) {
+        return allow();
+      }
+
+      deny(PermissionDenialReason.NoAdmin);
+    });
+  }
 }
 ```
 
@@ -92,8 +261,11 @@ class AdministrationPolicyStore {
 
 ```ts
 class AdministrationPolicyStore {
+    
+  ...
+    
   public get administrationActions() {
-    return this.policyManager.processPermission((allow, deny) => {
+    return this.policyManager.createPermission((allow, deny) => {
       if (this.userRepo.getRolesQuery().data?.isAdmin) {
         return allow();
       }
@@ -149,120 +321,4 @@ public calcReadingBook = (bookId: string) => { ... }
 
 ```ts
 public checkReadingBook = (bookId: string) => { ... }
-```
-
-## Использование permissions
-
-Результат вычисления permission - это объект:
-```ts
-type Permission = {
-  /**
-   * Разрешен ли доступ
-   */
-  isAllowed: boolean;
-  /**
-   * Причина отказа в доступе
-   */
-  reason?: PermissionDenialReason;
-};
-```
-
-В features необходимо избегать разрешения доступов через абстрактные компоненты вида:
-```tsx
-import { observer } from 'mobx-react-lite';
-
-import { permissionsStore } from '@example/modules/permissions';
-
-export const Sidebar = observer(() => {
-  return (
-    <Sidebar>
-      <PermissionsGateway
-        permission={permissionsStore.administration.administrationActions}
-        allow={
-          <RouterLink to={APP_ROUTES.createBook.getRedirectPath()}>
-            Создать книгу
-          </RouterLink>
-        }
-      />
-    </Sidebar>
-  );
-});
-```
-
-Использование компонентов вроде `PermissionsGateway` переносит логику доступов для фичи в UI слой, что нарушает [архитектурную концепцию](https://industrious-search-cdf.notion.site/Features-8536d73e2c86429c951b1cb9653e7294#da95e9d71cde4865a15d5559e7988619).
-
-Разрешение доступов должно происходить в `UIStore`.
-
-### Пример реализации и использования permission
-
-**Требования**
-
-Кнопка "Создать книгу" в Sidebar отображается только если пользователь является администратором.
-
-**Решение**
-
-```modules/permissions/domain/stores/PermissionsStore/policies/AdministrationPolicyStore```
-О [политиках](./policies) подробно будет написано в последующих разделах документации.
-
-```ts
-class AdministrationPolicyStore {
-  constructor(
-    private readonly policyManager: PolicyManagerStore,
-    private readonly userRepo: UserRepository,
-  ) {
-    makeAutoObservable(this, {}, { autoBind: true });
-
-    this.policyManager.registerPolicy({
-      name: 'administration',
-      prepareData: async (): Promise<void> => {
-        await Promise.all([this.userRepo.getRolesQuery().async()]);
-      },
-    });
-  }
-
-  /**
-   * Доступ к действиям администратора
-   */
-  public get administrationActions() {
-    return this.policyManager.processPermission((allow, deny) => {
-      if (this.userRepo.getRolesQuery().data?.isAdmin) {
-        return allow();
-      }
-
-      deny(PermissionDenialReason.NoAdmin);
-    });
-  }
-}
-```
-
-```modules/layout/features/MainLayout/Sidebar/UIStore```
-```ts
-export class UIStore {
-  constructor(private readonly permissions: PermissionsStore) {
-    makeAutoObservable(this, {}, { autoBind: true });
-  }
-
-  public get isAllowedBookCreation() {
-    return this.permissions.administration.administrationActions.isAllowed;
-  }
-}
-```
-
-```modules/layout/features/MainLayout/Sidebar/Sidebar.tsx```
-```tsx
-export const Sidebar = observer(() => {
-  const [{ isAllowedBookCreation }] = useState(createUIStore);
-
-  return (
-    <Sidebar>
-      <SidebarItem>
-        {isAllowedBookCreation && (
-          <RouterLink to={APP_ROUTES.createBook.getRedirectPath()}>
-            Создать книгу
-          </RouterLink>
-        )}
-      </SidebarItem>
-    </Sidebar>
-  );
-});
 ```

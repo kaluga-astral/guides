@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 # Reasons. Причины отказа в доступе
@@ -15,6 +15,7 @@ type Permission = {
    * Причина отказа в доступе
    */
   reason?: PermissionDenialReason;
+  hasReason: (reason: string) => boolean;
 };
 ```
 
@@ -38,17 +39,26 @@ type Permission = {
 
 ```modules/permissions/domain/stores/PermissionsStore/policies/BooksPolicy```
 ```ts
+// @astral/permissions в реальном коде должен реэкспортироваться через shared
+import { PolicyManagerStore, Policy } from '@astral/permissions';
+
 export class BooksPolicyStore {
+  private readonly policy: PermissionsPolicy;
+
   constructor(
-    private readonly policyManager: PolicyManagerStore,
+    policyManager: PolicyManagerStore,
     private readonly billingRepo: BillingRepository,
+    private readonly userRepo: UserRepository,
   ) {
     makeAutoObservable(this, {}, { autoBind: true });
 
-    this.policyManager.registerPolicy({
+    this.policy = policyManager.createPolicy({
       name: 'books',
       prepareData: async () => {
-        await Promise.all([this.billingRepo.getBillingInfoQuery().async()]);
+        await Promise.all([
+          this.userRepo.getRolesQuery().async(),
+          this.billingRepo.getBillingInfoQuery().async(),
+        ]);
       },
     });
   }
@@ -57,7 +67,11 @@ export class BooksPolicyStore {
    * Возможность добавить на полку книгу
    */
   public get addingToShelf() {
-    return this.policyManager.processPermission((allow, deny) => {
+    return this.policy.createPermission((allow, deny) => {
+      if (this.userRepo.getRolesQuery().data?.isAdmin) {
+        return allow();
+      }
+
       const billingInfo = this.billingRepo.getBillingInfoQuery()?.data;
 
       if (!billingInfo?.paid) {
@@ -65,8 +79,8 @@ export class BooksPolicyStore {
       }
 
       if (
-          billingInfo.info.shelf.allowedCount ===
-          billingInfo.info.shelf.currentCount
+        billingInfo.info.shelf.currentCount >=
+        billingInfo.info.shelf.allowedCount
       ) {
         return deny(PermissionDenialReason.ExceedShelfCount);
       }
@@ -79,6 +93,13 @@ export class BooksPolicyStore {
 
 ```modules/books/features/BookCard/UIStore```
 ```ts
+// В реальном коде для импорта из другого модуля необходимо использовать external файл
+import {
+  PermissionDenialReason,
+  PermissionsStore,
+  permissionsStore,
+} from '@example/modules/permissions';
+
 export class UIStore {
   public isOpenPayAccount = false;
 
@@ -97,14 +118,14 @@ export class UIStore {
       return;
     }
 
-    if (this.permissions.books.addingToShelf.hasReason('no-pay-account')) {
+    if (this.permissions.books.addingToShelf.hasReason(PermissionDenialReason.NoPay)) {
       this.openPaymentAccount();
 
       return;
     }
 
     if (
-      this.permissions.books.addingToShelf.hasReason('exceed-reading-count')
+      this.permissions.books.addingToShelf.hasReason(PermissionDenialReason.ExceedReadingCount)
     ) {
       this.notifyService.error(
         'Достигнуто максимальное количество книг на полке',
@@ -179,7 +200,41 @@ export enum PermissionDenialReason {
 }
 ```
 
-### Соглашения
+Пакет @astral/permissions содержит дополнительные системные причины отказа, которые могут произойти из-за ошибок в коде:
+```ts
+export enum SystemDenialReason {
+  /**
+   * При расчете доступа произошла ошибка
+   * **/
+  InternalError = 'internal-error',
+  /**
+   * Недостаточно данных для формирования доступа
+   * **/
+  MissingData = 'missing-data',
+}
+```
+
+Для централизованного хранения reasons, необходимо объединить SystemDenialReason и reasons нашего модуля:
+```ts
+import { SystemDenialReason } from '@astral/permissions';
+
+export enum PermissionsDenialReason {
+  /**
+   * При расчете доступа произошла ошибка
+   * **/
+  InternalError = SystemDenialReason.InternalError,
+  /**
+   * Недостаточно данных для формирования доступа
+   * **/
+  MissingData = SystemDenialReason.MissingData,
+  /**
+   * Пользователь не является админом
+   * **/
+  NoAdmin = 'no-admin',
+}
+```
+
+## Соглашения
 
 - Для каждого reason должен быть оставлен комментарий в виде jsdoc о предназначении данного reason
 - Значения reasons должны быть String в формате kebab-case

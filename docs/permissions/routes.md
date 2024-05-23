@@ -194,7 +194,7 @@ type Props = {
   /**
    * Позволяет отрендерить компонент для конкретной причины отказа в доступе
    */
-  denialSwitch: Partial<Record<PermissionDenialReason, ReactNode>>;
+  denialSwitch: Record<string, ReactNode>;
   children: ReactNode;
 };
 
