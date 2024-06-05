@@ -156,6 +156,18 @@ envsubst "${PUBLIC_WS_URL}" < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.
 
 ## Использование env из сгенерированного файла 
 
+Для использования переменных необходимо определить тип для `window.__ENV__` в `global.d.ts`:
+```ts
+interface Window {
+  __ENV__: {
+    PUBLIC_API_URL: string;
+    PUBLIC_SENTRY_DSN: string;
+    PUBLIC_SENTRY_ENV: string;
+    PUBLIC_RELEASE_TAG: string;
+  };
+}
+```
+
 В браузере доступ к env переменным осуществляется через `window.__ENV__` в application слое приложения:
 ```ts
 configService.init({
