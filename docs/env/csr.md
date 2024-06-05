@@ -116,6 +116,7 @@ ENTRYPOINT ["sh", "/usr/share/nginx/html/scripts/startup.prod.sh"]
 ```js
 window.__ENV__={"PUBLIC_API_URL":"https://astral.ru"};
 ```
+Хэш необходим для правильной работы http cache.
 4. Подменяет в `index.html` ссылку `/env.js` на `env.[hash].js`
 5. Подменяет переменные для nginx на их значения. Читай об этом подробнее [здесь](#подстановка-переменных-в-nginx)
 6. Запускает nginx
