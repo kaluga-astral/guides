@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
   "version": "0.2",
   "language": "en,ru",
-  "languageId": "ts,tsx",
+  "languageId": "ts,tsx,markdown,docker,bash",
   "import": [
     "@cspell/dict-ru_ru/cspell-ext.json"
   ],
