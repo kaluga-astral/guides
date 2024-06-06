@@ -149,7 +149,7 @@ http {
 # Необходимо экспортировать, тк envsubst является разветвленным процессом и не знает неэкспортируемых переменных
 export PUBLIC_WS_URL
 
-# Подмена указанных переменные в nginx.conf.template и копирование всего файла в nginx.conf
+# Подмена указанных переменных в nginx.conf.template и копирование всего файла в nginx.conf
 envsubst "${PUBLIC_WS_URL}" < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 ```
 4. При запуске `startup.prod.sh` подменит в `nginx.conf.template` все переменные на их значения и создаст `nginx.conf`, который и будет использовать для запуска nginx
