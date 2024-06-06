@@ -23,6 +23,15 @@ const config: Config = {
   onBrokenMarkdownLinks: 'warn',
   trailingSlash: false,
 
+  plugins: [
+    [
+      require.resolve('docusaurus-lunr-search'),
+      {
+        languages: ['en', 'ru'],
+      }
+    ]
+  ],
+
   presets: [
     [
       'classic',
@@ -80,13 +89,6 @@ const config: Config = {
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
-    },
-    themes: ['@docusaurus/theme-search-algolia'],
-    algolia: {
-      appId: process.env.ALGOLIA_APP_ID || 'test',
-      apiKey: process.env.ALGOLIA_API_KEY || 'test',
-      indexName: 'guides',
-      contextualSearch: true,
     },
   } satisfies Preset.ThemeConfig,
 };
