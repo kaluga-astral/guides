@@ -2,5 +2,5 @@
 const { createConfig } = require('@astral/commitlint-config');
 
 module.exports = createConfig({
-  ticketPrefix: 'STYLE',
+  ticketPrefix: 'UIKIT',
 });

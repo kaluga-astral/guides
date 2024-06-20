@@ -273,3 +273,66 @@ type DenialMissingDataPermission = {
 ```
 
 Reason `PermissionDenialReason.MissingData` можно будет при необходимости обработать централизованно или на месте использования permissions.
+
+## Создание policy без `preparingData`
+
+Некоторые policy состоят полностью из permissions, для которых данные для формирования принимаются через параметры:
+```ts
+export class PaymentPolicyStore {
+  private readonly policy: PermissionsPolicy;
+
+  constructor(
+    policyManager: PermissionsPolicyManagerStore,
+    private readonly userRepo: UserRepository,
+  ) {
+    ...
+  }
+
+  // calcPayment использует только age из параметра
+  public calcPayment = (age: number) =>
+    this.policy.createPermission((allow, deny) => {
+      if (age < 18) {
+        return deny(PermissionsDenialReason.MinorAge);
+      }
+
+      allow();
+    });
+
+  // calcPaymentFromOrg использует только org из параметра
+  public calcPaymentFromOrg = (org: Organization) =>
+    this.policy.createPermission((allow, deny) => {
+      if (!org.permissions.includes('admin')) {
+        return deny(PermissionsDenialReason.NoAdmin);
+      }
+
+      allow();
+    });
+}
+```
+
+Для таких случаев в пакете [@astral/permissions](https://www.npmjs.com/package/@astral/permissions) предусмотрен флаг `withoutDataPreparation` при создании policy:
+```ts
+
+export class PaymentPolicyStore {
+  private readonly policy: PermissionsPolicy;
+
+  constructor(
+    policyManager: PermissionsPolicyManagerStore,
+    private readonly userRepo: UserRepository,
+  ) {
+    makeAutoObservable(this, {}, {autoBind: true});
+
+    this.policy = policyManager.createPolicy({
+      name: 'payment',
+      withoutDataPreparation: true,
+    });
+  }
+}
+```
+
+Проброс флага позволит не указывать `prepareData` для конкретного policy.
+
+#### Важно
+
+Вызов `PermissionsStore.prepareData` необходим даже если все policy были созданы с флагом `withoutDataPreparation`.
+Это необходимо для надежности формирования доступов, если один из policy начнет использовать `prepareData`.
