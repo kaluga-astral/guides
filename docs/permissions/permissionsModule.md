@@ -9,12 +9,16 @@ sidebar_position: 2
 ```
 ├── modules/
 |    ├── permissions/
-|    |    ├── stores/
-|    |    |    ├── PermissionsStore/
-|    |    |    |    ├── policies/
-|    |    |    |    ├── rules/
-|    |    |    |    ├── PermissionsStore.ts
+|    |    ├── domain/
+|    |    |    ├── stores/
+|    |    |    |    ├── PermissionsStore/
+|    |    |    |    |    ├── policies/
+|    |    |    |    |    ├── rules/
+|    |    |    |    |    ├── PermissionsStore.ts
+|    |    |    |    |    └── index.ts
 |    |    |    |    └── index.ts
+|    |    |    ├── types/
+|    |    |    ├── enums.ts
 |    |    |    └── index.ts
 |    |    ├── features/
 |    |    |    ├── routesGuards/
@@ -22,8 +26,6 @@ sidebar_position: 2
 |    |    |    |    ├── ReadingBookRouteGuard/
 |    |    |    |    └── index.ts
 |    |    |    └── index.ts
-|    |    ├── types/
-|    |    ├── enums.ts
 |    |    └── index.ts
 |    ├── payment/
 |    └── layout/

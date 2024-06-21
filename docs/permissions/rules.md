@@ -14,17 +14,18 @@ sidebar_position: 6
 ```
 ├── modules/
 |    ├── permissions/
-|    |    ├── stores/
-|    |    |    ├── PermissionsStore/
-|    |    |    |    ├── policies/
-|    |    |    |    ├── rules/
-|    |    |    |    |    |── calcAcceptableAge/
-|    |    |    |    |    |── calcAccountPayment/
-|    |    |    |    |    └── index.ts
-|    |    |    ├── PermissionsStore.ts
+|    |    ├── domain/
+|    |    |    ├── stores/
+|    |    |    |    ├── PermissionsStore/
+|    |    |    |    |    ├── policies/
+|    |    |    |    |    ├── rules/
+|    |    |    |    |    |    |── calcAcceptableAge/
+|    |    |    |    |    |    |── calcAccountPayment/
+|    |    |    |    |    |    └── index.ts
+|    |    |    |    ├── PermissionsStore.ts
+|    |    |    |    └── index.ts
+|    |    |    ├── enums.ts
 |    |    |    └── index.ts
-|    |    ├── enums.ts
-|    |    └── index.ts
 ```
 
 ## Rules - приватные функции модуля `permissions`

@@ -12,17 +12,19 @@ sidebar_position: 3
 ```
 ├── modules/
 |    ├── permissions/
-|    |    ├── stores/
-|    |    |    ├── PermissionsStore/
-|    |    |    |    ├── policies/
-|    |    |    |    |    |── AdministrationPolicyStore/
-|    |    |    |    |    |── BooksPolicyStore/
-|    |    |    |    |    |── PaymentPolicyStore/
+|    |    ├── domain/
+|    |    |    ├── stores/
+|    |    |    |    ├── PermissionsStore/
+|    |    |    |    |    ├── policies/
+|    |    |    |    |    |    |── AdministrationPolicyStore/
+|    |    |    |    |    |    |── BooksPolicyStore/
+|    |    |    |    |    |    |── PaymentPolicyStore/
+|    |    |    |    |    |    └── index.ts
+|    |    |    |    |    ├── PermissionsStore.ts
 |    |    |    |    |    └── index.ts
-|    |    |    ├── PermissionsStore.ts
+|    |    |    |    └── index.ts
+|    |    |    ├── enums.ts
 |    |    |    └── index.ts
-|    |    ├── enums.ts
-|    |    └── index.ts
 ```
 
 Policies являются частью имплементации PermissionStore, поэтому находятся внутри него.
