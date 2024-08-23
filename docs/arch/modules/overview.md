@@ -2,7 +2,7 @@
 sidebar_position: 0
 ---
 
-# Обзор
+# Обзор Modules
 
 ![Common](../images/common.png)
 
@@ -70,7 +70,7 @@ sidebar_position: 0
 
 ### Features
 
-[Подробный обзор Features](./features)
+[Подробный обзор Features](./features/overview)
 
 ### Domain
 
