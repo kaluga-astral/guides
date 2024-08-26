@@ -149,13 +149,13 @@ export {
 
 Valid:
 
-```jsx
+```
 import { CashPayment } from '@astral/modules/payment'; 
 ```
 
 Invalid:
 
-```jsx
+```
 import { PayButton } from '@astral/modules/payment/features'; 
 ```
 
@@ -197,13 +197,13 @@ Valid
 
 `external.ts`
 
-```jsx
+```
 export { UserStore } from '@astral/modules/auth';
 ```
 
 `Payment/features/CardPayment/store/store.ts`
 
-```jsx
+```
 import { UserStore } from '../../../external';
 ...
 ```
@@ -212,7 +212,7 @@ Invalid
 
 `Payment/features/CardPayment/store/store.ts`
 
-```jsx
+```
 import { UserStore } from '@astral/modules/auth';
 ...
 ```
