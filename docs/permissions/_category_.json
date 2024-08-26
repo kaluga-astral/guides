@@ -1,6 +1,6 @@
 {
   "label": "Permissions. Паттерн доступов на клиенте",
-  "position": 1,
+  "position": 3,
   "link": {
     "type": "generated-index",
     "description": "Паттерн реализации системы доступов на клиенте"

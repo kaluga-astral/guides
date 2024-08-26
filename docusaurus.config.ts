@@ -5,7 +5,7 @@ import * as process from "process";
 
 const config: Config = {
   title: 'Astral.Frontend Guides',
-  tagline: 'Стандарты проектирования frontend Астрал-Софт',
+  tagline: 'Frontend стандарты Астрал-Софт',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -75,6 +75,13 @@ const config: Config = {
           position: 'left',
           href: '/docs/issues',
           label: 'Issues',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'tutorialSidebar',
+          position: 'left',
+          href: '/docs/arch/intro',
+          label: 'Architecture Guide',
         },
         {
           href: 'https://github.com/kaluga-astral/guides',
