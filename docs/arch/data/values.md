@@ -225,6 +225,7 @@ export enum SortOrder {
 |    |    |    |    |    ├── formatFullAddress.ts
 |    |    |    |    |    ├── formatFullAddress.test.ts
 |    |    |    |    |    └── index.ts
+|    |    |    |    └── index.ts   
 |    |    |    └── index.ts     
 |    |    └── index.ts    
 |    └── index.ts                  
@@ -282,5 +283,205 @@ export class AbonentRepository {
 
 ## Style Guide
 
+### DTO values хранятся в файле с названием идентичному директории
+
+**✨ Мотивация**
+
+Единообразие кодовой базы.
+
+**🤖 Автоматизация**
+
+Не имплементировано в eslint-config
+
+**✅ Valid**
+
+```values/address/address.ts```
+```ts
+export namespace AddressDTO {
+    ...
+}
+```
+
+**❌ Invalid**
+
+```values/address/dto.ts```
+```ts
+export namespace AddressDTO {
+    ...
+}
+```
+
 ### DTO для values описываются в namespace
 
+**✨ Мотивация**
+
+Решается проблема пересечения имен.
+
+**🤖 Автоматизация**
+
+Не имплементировано в eslint-config
+
+**✅ Valid**
+
+```values/address/address.ts```
+```ts
+export namespace AddressDTO {
+  export type FullInfo = {
+    street: string;
+    city: string;
+  }
+}
+```
+
+**❌ Invalid**
+
+```values/address/address.ts```
+```ts
+export type AddressFullInfo = {
+  street: string;
+  city: string;
+}
+```
+
+### Название namespace для values имеет постфикс DTO
+
+**✨ Мотивация**
+
+Избавляет от необходимости дублировать постфиксы в каждом типе.
+
+**🤖 Автоматизация**
+
+Не имплементировано в eslint-config
+
+**✅ Valid**
+
+```values/address/address.ts```
+```ts
+export namespace AddressDTO {
+    ...
+}
+```
+
+**❌ Invalid**
+
+```values/address/address.ts```
+```ts
+export namespace Address {
+    ...
+}
+```
+
+### Enums хранятся в отдельном файле
+
+**✨ Мотивация**
+
+Отделение типов от enums.
+
+**🤖 Автоматизация**
+
+Не имплементировано в eslint-config
+
+**✅ Valid**
+
+```values/address/enums.ts```
+```ts
+export enum AddressType {
+  Default,
+  External,
+}
+```
+
+### Названия enums имеют префикс, указывающий на принадлежность к конкретному value
+
+**✨ Мотивация**
+
+Простая идентификация enum и решение проблемы пересечения имен.
+
+**🤖 Автоматизация**
+
+Не имплементировано в eslint-config
+
+**✅ Valid**
+
+```values/license/enums.ts```
+```ts
+export enum LicenseType {
+  Default,
+  External,
+}
+```
+
+### Formatters находятся в отдельной директории, каждый formatter имеет свою отдельную директорию
+
+**✨ Мотивация**
+
+- Простая возможность переиспользования
+- Возможность держать тесты рядом с утилитой
+
+**🤖 Автоматизация**
+
+Не имплементировано в eslint-config
+
+**✅ Valid**
+
+```     
+├── data/
+|    ├── repositories/ 
+|    ├── sources/
+|    ├── values/
+|    |    ├── address/
+|    |    |    ├── address.ts
+|    |    |    ├── formatters/
+|    |    |    |    ├── formatFullAddress/
+|    |    |    |    |    ├── formatFullAddress.ts
+|    |    |    |    |    ├── formatFullAddress.test.ts
+|    |    |    |    |    └── index.ts
+|    |    |    |    └── index.ts   
+|    |    |    └── index.ts     
+|    |    └── index.ts    
+|    └── index.ts                  
+```
+
+**❌ Invalid**
+
+```     
+├── data/
+|    ├── repositories/ 
+|    ├── sources/
+|    ├── values/
+|    |    ├── address/
+|    |    |    ├── address.ts
+|    |    |    ├── formatFullAddress.ts
+|    |    |    └── index.ts     
+|    |    └── index.ts    
+|    └── index.ts                  
+```
+
+### Имена formatters начинаются с `format` и указывают на преобразуемый тип
+
+**✨ Мотивация**
+
+Единообразие кодовой базы.
+
+**🤖 Автоматизация**
+
+Не имплементировано в eslint-config
+
+**✅ Valid**
+
+```     
+├── data/
+|    ├── repositories/ 
+|    ├── sources/
+|    ├── values/
+|    |    ├── address/
+|    |    |    ├── address.ts
+|    |    |    ├── formatters/
+|    |    |    |    ├── formatFullAddress/
+|    |    |    |    ├── formatShortAddress/
+|    |    |    |    ├── formatAddressCity/
+|    |    |    |    └── index.ts   
+|    |    |    └── index.ts     
+|    |    └── index.ts    
+|    └── index.ts                  
+```
