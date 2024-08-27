@@ -60,7 +60,7 @@ import { WarrantType } from './enums';
 
 export namespace AbonentsNetworkSourcesDTO {
   type Warrant = {
-    type: WarrantType,
+    type: WarrantType;
     ...
   };
 
@@ -76,7 +76,7 @@ export namespace AbonentsNetworkSourcesDTO {
 ```ts
 export enum WarrantType {
   Default,
-  External
+  External,
 };
 ```
 
@@ -87,7 +87,7 @@ import { WarrantType } from './enums';
 
 export namespace DocflowNetworkSourcesDTO {
   type Warrant = {
-    type: WarrantType,
+    type: WarrantType;
     ...
   };
 
@@ -103,7 +103,7 @@ export namespace DocflowNetworkSourcesDTO {
 ```ts
 export enum WarrantType {
   Default,
-  External
+  External,
 };
 ```
 
@@ -130,7 +130,7 @@ import { WarrantType } from './enums';
 
 export namespace WarrantDTO {
   export type Warrant = {
-    type: WarrantType,
+    type: WarrantType;
     ...
   };
 }
@@ -140,7 +140,7 @@ export namespace WarrantDTO {
 ```ts
 export enum WarrantType {
   Default,
-  External
+  External,
 };
 ```
 
