@@ -4,7 +4,7 @@
 - Проброс кастомного отображения в сервис
 - Формирование props для компонента
 
-#### adaptComponentToDomain
+## adaptComponentToDomain
 
 `adaptComponentToDomain` позволяет вызывать рендер компонента вне `jsx`, а именно в `UIStore`.
 
@@ -27,7 +27,7 @@ export const adaptComponentToDomain =
     createElement(component, props);
 ```
 
-#### Проброс render в service. Пример с notify
+## Проброс render в service. Пример с notify
 
 Задача: при вызове notify использовать кастомное отображение сообщения.
 
@@ -62,7 +62,7 @@ export const createPaymentStore = () =>
   );
 ```
 
-### Формирование props для компонента
+## Формирование props для компонента
 
 ```ts
 import { DeleteIcon, EditIcon } from '@example/shared';
