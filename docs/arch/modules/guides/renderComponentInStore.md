@@ -98,3 +98,39 @@ export const createUIStore = () =>
     renderEdit: adaptComponentToDomain(EditIcon),
   });
 ```
+
+## Сохранение ссылки на ReactNode для последующего использования 
+
+```ts
+import type { ReactNode } from 'react';
+
+export class UIStore {
+  private alertMessage: ReactNode;
+
+  constructor(private readonly notify: Notify) {
+    makeAutoObservable(this);
+  }
+
+  public mount = (message: ReactNode) => {
+    this.alertMessage = message;
+  };
+
+  public send = () => {
+    this.notify(this.alertMessage);
+  };
+}
+```
+
+```tsx
+const Alert = () => {
+  const [{ mount }] = useState(createUIStore);
+
+  const message = <Message variant="info">Hello</Message>;
+
+  useEffect(() => {
+    mount(message);
+  }, []);
+
+    ...
+};
+```
