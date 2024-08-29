@@ -61,7 +61,7 @@ Hook должен возвращать абстрактный интерфейс
 
 ## Взаимодействие с UIStore
 
-`useLogic` должен принимать `UIStore` и другие stores параметром по ссылки для возможности более простого тестирования:
+`useLogic` должен принимать `UIStore` и другие stores параметром по ссылке для возможности более простого тестирования:
 ```ts
 export const useLogic = (store: UIStore) => {
   const isShowDescription = useEndScroll();
