@@ -232,7 +232,7 @@ const FullName = ({ name, surname }: Props) => {
 
 ## Render компонентов в store
 
-[Modules Guides | Render компонентов в store](../../guides/renderComponentInStore).
+[Modules Guides | Render компонентов в store](../guides/renderComponentInStore).
 
 ## Проброс ссылок на ref
 
